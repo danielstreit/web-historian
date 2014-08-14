@@ -17,28 +17,35 @@ exports.headers = headers = {
 };
 
 exports.serveAssets = function(res, asset, callback) {
-  // Write some code here that helps serve up your static files!
-  // (Static files are things like html (yours or archived from others...), css, or anything that doesn't change often.)
-  var dir;
-  var statusCode = 200;
-  res.writeHead(statusCode, headers);
-
-  var stream = fs.createReadStream(getPath(asset));
-  stream.on('data', function(chunk) {
-    res.write(chunk);
-  });
-  stream.on('end', function() {
-    res.end();
+  var statusCode = asset === 'loading.html' ? 302 : 200
+  getPath(asset, function(path){
+    if (path === null) {
+      return fileNotFound(res);
+    }
+    fs.readFile(path, 'utf8', function(err, file) {
+      res.writeHead(statusCode, headers);
+      res.end(file);
+    });
   });
 };
 
-var getPath = function(asset) {
+var fileNotFound = function(res){
+  res.writeHead(404, headers);
+  res.end('File not found');
+}
+
+var getPath = function(asset, callback) {
   if (staticFiles[asset]) {
-    return './web/public/' + staticFiles[asset];
+    return callback(path.join(archive.paths.siteAssets, staticFiles[asset]));
   }
-  return './archives/sites/' + asset;
+  archive.isUrlInList(asset, function(inList){
+    if(inList) {
+      return callback(path.join(archive.paths.archivedSites, asset));
+    } else {
+      return callback(null);
+    }
+  })
 };
-
 
 
 // As you progress, keep thinking about what helper functions you can put here!

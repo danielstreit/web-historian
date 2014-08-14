@@ -1,2 +1,6 @@
-// eventually, you'll have some code here that uses the code in `archive-helpers.js`
-// to actually download the urls you want to download.
+var cronJob = require('cron').CronJob;
+var archives = require('../helpers/archive-helpers');
+
+new cronJob('*/3 * * * * *', function(){
+    archives.downloadUrls();
+}, null, true, "America/Los_Angeles");
